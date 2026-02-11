@@ -78,10 +78,10 @@ export default function Dashboard() {
         <h2 className="text-2xl sm:text-3xl font-bold font-['Outfit'] tracking-tight">
           Welcome back, <span className="text-primary">{user?.name}</span>
         </h2>
-        <p className="text-muted-foreground mt-1">
-          <Badge variant="outline" className="mr-2 capitalize">{user?.role?.replace('_', ' ')}</Badge>
-          Here's your project overview
-        </p>
+        <div className="text-muted-foreground mt-1 flex items-center gap-2">
+          <Badge variant="outline" className="capitalize">{user?.role?.replace('_', ' ')}</Badge>
+          <span>Here's your project overview</span>
+        </div>
       </motion.div>
 
       {/* Stat Cards */}
