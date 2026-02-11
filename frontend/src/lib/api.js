@@ -16,11 +16,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 responses
+// Handle 401 responses - skip redirect for auth/me verification calls
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    const isAuthCheck = err.config?.url?.includes('/auth/me');
+    if (err.response?.status === 401 && !isAuthCheck) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       if (!window.location.pathname.includes('/login')) {
