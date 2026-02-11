@@ -1,0 +1,168 @@
+{
+  "project_name": "Enterprise Project Management System",
+  "design_philosophy": {
+    "identity": "The Dark Precision",
+    "core_principles": [
+      "Fusion over Imitation: Mix Productivity tools with Sci-Fi HUD aesthetics.",
+      "Emotion First: The user feels like a pilot in a cockpit - in control, focused, powerful.",
+      "Content is King: Data is the hero. High contrast, distinct hierarchy.",
+      "Negative Space: Use it to reduce cognitive load in dense dashboards.",
+      "Contrast: High contrast for text (WCAG AA), subtle depth for containers."
+    ],
+    "anti_patterns": [
+      "Purple/Teal primary buttons (unless specific brand accent).",
+      "Center-aligned everything.",
+      "Generic 'Bootstrap' columns.",
+      "Full screen gradients (use subtle glows).",
+      "Emoji icons (Forbidden)."
+    ]
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Outfit, sans-serif",
+      "body": "Manrope, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "installation": {
+      "google_fonts_import": "@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Manrope:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');"
+    },
+    "usage_rules": [
+      "Headings (H1-H3): 'Outfit' - Weight 600/700. Tracking tight (-0.02em).",
+      "Body: 'Manrope' - Weight 400. Leading relaxed.",
+      "Data/Code: 'JetBrains Mono' - Small size, tabular nums.",
+      "Labels: Uppercase, tracking wide (0.1em), tiny text (text-xs)."
+    ]
+  },
+  "colors": {
+    "theme": "dark",
+    "palette": {
+      "background": "#09090b",
+      "foreground": "#fafafa",
+      "card": "#18181b",
+      "card_foreground": "#fafafa",
+      "popover": "#18181b",
+      "popover_foreground": "#fafafa",
+      "primary": "#6366f1",
+      "primary_foreground": "#ffffff",
+      "secondary": "#27272a",
+      "secondary_foreground": "#fafafa",
+      "muted": "#27272a",
+      "muted_foreground": "#a1a1aa",
+      "accent": "#27272a",
+      "accent_foreground": "#fafafa",
+      "destructive": "#ef4444",
+      "destructive_foreground": "#ffffff",
+      "border": "#27272a",
+      "input": "#27272a",
+      "ring": "#6366f1"
+    },
+    "chart_colors": {
+      "chart_1": "#6366f1",
+      "chart_2": "#10b981",
+      "chart_3": "#3b82f6",
+      "chart_4": "#f59e0b",
+      "chart_5": "#ec4899"
+    },
+    "gradients": {
+      "hero_glow": "radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, rgba(9, 9, 11, 0) 70%)",
+      "active_border": "linear-gradient(90deg, transparent, #6366f1, transparent)"
+    }
+  },
+  "spacing_and_layout": {
+    "spacing_scale": [
+      "p-4",
+      "p-6",
+      "p-8",
+      "p-12",
+      "p-16",
+      "p-24",
+      "p-32"
+    ],
+    "container_padding": "p-6 md:p-8",
+    "grids": {
+      "dashboard": "grid-cols-1 md:grid-cols-12 gap-6",
+      "landing": "grid-cols-1 md:grid-cols-8 lg:grid-cols-12 gap-8"
+    },
+    "bento_rules": {
+      "hero_span": "col-span-full md:col-span-8 lg:col-span-8",
+      "side_span": "col-span-full md:col-span-4 lg:col-span-4"
+    }
+  },
+  "components": {
+    "buttons": {
+      "style": "h-10 px-4 py-2 rounded-md font-medium transition-all active:scale-95",
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(99,102,241,0.5)]",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      "ghost": "hover:bg-accent hover:text-accent-foreground"
+    },
+    "cards": {
+      "style": "bg-card text-card-foreground border border-border/40 shadow-sm rounded-lg overflow-hidden",
+      "hover_effect": "hover:border-primary/50 transition-colors duration-300"
+    },
+    "inputs": {
+      "style": "bg-background border-input ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    },
+    "glassmorphism": {
+      "overlay": "bg-black/60 backdrop-blur-xl border border-white/10"
+    }
+  },
+  "motion": {
+    "libraries": [
+      "framer-motion",
+      "lenis"
+    ],
+    "transitions": {
+      "default": "transition-all duration-200 ease-in-out",
+      "page_load": "initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}"
+    },
+    "micro_interactions": [
+      "Button active scale (0.98)",
+      "Card hover lift (-2px)",
+      "Input focus ring glow"
+    ]
+  },
+  "charts": {
+    "library": "recharts",
+    "style": "minimal",
+    "tooltip": "bg-popover/90 backdrop-blur-md border border-border text-popover-foreground rounded-md shadow-lg"
+  },
+  "icons": {
+    "library": "lucide-react",
+    "style": "stroke-width={1.5} size={20}"
+  },
+  "visual_enhancers": {
+    "textures": "Use subtle noise texture on background for depth.",
+    "glows": "Use colored shadows for primary actions (Neon glow).",
+    "borders": "1px solid border-white/5 for structural definition."
+  },
+  "creative_assets": {
+    "landing_background": "Animated network nodes using tsparticles or framer-motion svg tracing.",
+    "images": {
+      "hero": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop",
+      "team_collaboration": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop",
+      "dashboard_preview": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Install dependencies: `yarn add framer-motion lenis lucide-react clsx tailwind-merge`.",
+    "Configure `tailwind.config.js` with the colors provided in this JSON.",
+    "Add the Google Fonts import to `src/index.css`.",
+    "Set the body background to `#09090b` in `src/index.css`.",
+    "Create a `Layout` component that handles the Sidebar and Topbar structure.",
+    "Use `framer-motion` for all page transitions.",
+    "Ensure all text has sufficient contrast (Use `text-zinc-400` for muted, `text-zinc-100` for primary).",
+    "For the Landing Page, implement a 'Tetris' grid layout with bold typography using 'Outfit'.",
+    "For Dashboards, use a dense 'Bento' grid with 'Manrope' font.",
+    "Implement 'Dark Precision' theme: Dark backgrounds, electric indigo accents, sharp borders.",
+    "Use 'lucide-react' for all icons. NO EMOJIS."
+  ],
+  "universal_guidelines": [
+    "You tend to converge toward generic outputs. Avoid this.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for overlays.",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Subtle grain textures and noise overlays separate good from extraordinary.",
+    "Never use generic centered layouts."
+  ]
+}
