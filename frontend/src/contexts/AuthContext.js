@@ -4,34 +4,43 @@ import { authApi } from '../lib/api';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  // Initialize from localStorage synchronously to prevent flash
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('user');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
+  const [loading, setLoading] = useState(() => {
+    // If we have a token in localStorage, set loading false immediately
+    // (user is already set from localStorage above)
+    return !localStorage.getItem('token');
+  });
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
 
-  const checkAuth = useCallback(async () => {
-    const savedToken = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    if (savedToken && savedUser) {
+  // Background verify - don't block rendering
+  useEffect(() => {
+    const verify = async () => {
+      const savedToken = localStorage.getItem('token');
+      if (!savedToken) {
+        setLoading(false);
+        return;
+      }
       try {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
-        // Verify with server
         const res = await authApi.me();
         setUser(res.data);
         localStorage.setItem('user', JSON.stringify(res.data));
       } catch {
+        // Token is invalid - clear auth
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setUser(null);
         setToken(null);
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+    verify();
   }, []);
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
 
   const login = useCallback((tokenValue, userData) => {
     localStorage.setItem('token', tokenValue);
@@ -54,7 +63,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser, checkAuth }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
