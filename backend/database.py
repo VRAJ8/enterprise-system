@@ -9,7 +9,7 @@ load_dotenv(ROOT_DIR / '.env')
 
 # 1. Get the Connection String
 # This looks for 'MONGO_URL' in your .env file
-mongo_url = os.environ.get('mongodb+srv://admin:s2T7NXRUIQJokF6R@cluster0.nn05dio.mongodb.net/?appName=Cluster0')
+mongo_url = os.environ.get('MONGO_URL')
 
 # 2. Initialize the Client
 client = AsyncIOMotorClient(mongo_url)
