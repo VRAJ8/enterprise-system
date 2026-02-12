@@ -3,7 +3,8 @@ import axios from 'axios';
 const API_BASE = process.env.REACT_APP_BACKEND_URL + '/api';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  // This looks for the Netlify variable first, otherwise uses localhost
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api',
   withCredentials: true,
 });
 
