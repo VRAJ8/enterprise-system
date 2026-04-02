@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator
 } from '../components/ui/dropdown-menu';
+import AIAssistant from './AIAssistant';
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -164,11 +165,12 @@ export default function Layout({ children }) {
           </div>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">
           {children}
         </main>
       </div>
+
+      <AIAssistant />
     </div>
   );
 }

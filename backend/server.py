@@ -1,35 +1,36 @@
-from fastapi import FastAPI
+# backend/server.py
+from fastapi import FastAPI, Body
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 import os
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
+from apscheduler.schedulers.background import BackgroundScheduler
+
+# Import ONLY the brain functions from your other file
+from agent_service import run_deadline_check, handle_chat_query
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 app = FastAPI(title="Enterprise PM System")
 
-# CORS
+# CORS Setup
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=os.environ.get('CORS_ORIGINS', 'http://localhost:5173').split(','),
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
-# Mount uploads directory
+# Mount uploads
 uploads_dir = ROOT_DIR / "uploads"
 uploads_dir.mkdir(exist_ok=True)
 app.mount("/api/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
-# Import and include routers
+# Include your existing routes
 from routes.auth import router as auth_router
 from routes.projects import router as projects_router
 from routes.tasks import router as tasks_router
@@ -46,29 +47,39 @@ app.include_router(notifications_router)
 app.include_router(dashboard_router)
 app.include_router(users_router)
 
+# AI Endpoints
+@app.post("/api/ai/chat")
+async def chat_with_ai(payload: dict = Body(...)):
+    user_message = payload.get("message")
+    ai_response = handle_chat_query(user_message)
+    return {"reply": ai_response}
 
-@app.get("/api")
-async def root():
-    return {"message": "Enterprise PM System API", "status": "running"}
+@app.get("/api/ai/trigger-scan")
+async def manual_trigger():
+    # This lets you test the proactive part manually
+    run_deadline_check()
+    return {"message": "Agent is scanning tasks..."}
 
+# Startup logic
+scheduler = BackgroundScheduler()
 
-# DB indexes on startup
 @app.on_event("startup")
 async def startup():
     from database import db
+    # Create your indexes
     await db.users.create_index("user_id", unique=True)
-    await db.users.create_index("email", unique=True)
-    await db.projects.create_index("project_id", unique=True)
-    await db.tasks.create_index("task_id", unique=True)
-    await db.tasks.create_index("project_id")
-    await db.tasks.create_index("assigned_to")
-    await db.notifications.create_index("user_id")
-    await db.chat_messages.create_index("channel_id")
-    await db.activity_logs.create_index("created_at")
-    logger.info("Database indexes created")
-
+    # ... (rest of your existing indexes)
+    
+    # Start the Proactive AI Scheduler
+    scheduler.add_job(run_deadline_check, 'cron', hour=9, minute=0)
+    scheduler.start()
 
 @app.on_event("shutdown")
 async def shutdown():
     from database import client
     client.close()
+    scheduler.shutdown()
+
+@app.get("/api")
+async def root():
+    return {"message": "Enterprise PM System API", "status": "running"}
