@@ -1,0 +1,5 @@
+Success: I'd be happy to help you with your project tasks. Based on the current project data, I see that you have several tasks in different stages of completion. 
+
+You have two tasks that are currently "in_progress": "Create API" and "login page". You also have one task that is "completed": "landing page". Additionally, you have two tasks that are still "todo": "add items" and "payment gateway".
+
+Which task would you like to focus on first? Or would you like me to suggest a priority based on the current status of the tasks?

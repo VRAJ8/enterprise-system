@@ -1,0 +1,62 @@
+[
+  {
+    "user_id": "user_121455bd7fd2",
+    "name": "Karan",
+    "email": "karan@admin",
+    "password": "$2b$12$i3bRf.6pCCnDRXQmPThaweFiIJSk1GBT4e15SdQp/qtvHsfhvyBde",
+    "role": "admin",
+    "picture": null,
+    "department": null,
+    "created_at": "2026-02-12T06:48:05.877365+00:00"
+  },
+  {
+    "user_id": "user_97ba8c3f366b",
+    "name": "Diljit",
+    "email": "diljit@pm",
+    "password": "$2b$12$KVXueH866twAkXcfbqYgsuTCs9BWO2.9FojoJrYOfIHf.xOJvXQYy",
+    "role": "project_manager",
+    "picture": null,
+    "department": null,
+    "created_at": "2026-02-12T07:03:00.434247+00:00"
+  },
+  {
+    "user_id": "user_bd2306d312a6",
+    "name": "Arijit",
+    "email": "arijit@tm",
+    "password": "$2b$12$dBQNeGUvD0jMu7qy.Rm/tun/U8Ld6DLQG7f.918t.hfqtc/zlRSSe",
+    "role": "team_member",
+    "picture": null,
+    "department": null,
+    "created_at": "2026-02-12T07:04:23.091836+00:00"
+  },
+  {
+    "user_id": "user_12b1e86323ac",
+    "name": "shubh",
+    "email": "shubh@tm",
+    "password": "$2b$12$oW6Wx5EG/DawKX9gM8SVOuxs7KKQ2ghF4PbANiLS2A5BkLTOb9xJi",
+    "role": "team_member",
+    "picture": null,
+    "department": null,
+    "created_at": "2026-02-12T07:04:56.085378+00:00"
+  },
+  {
+    "user_id": "user_56079225b29d",
+    "name": "Anuv",
+    "email": "anuv@tm",
+    "password": "$2b$12$qd1w9cXVy/5nUr6O56OkQOTjj3C.KYp86SKZE8eZGsTacLxopiQPu",
+    "role": "team_member",
+    "picture": null,
+    "department": null,
+    "created_at": "2026-02-12T07:05:30.235993+00:00"
+  },
+  {
+    "user_id": "user_b7cb6fc052b7",
+    "name": "Vraj Patel",
+    "email": "vrajmpatel8123@gmail.com",
+    "password": "",
+    "role": "team_member",
+    "picture": "https://lh3.googleusercontent.com/a/ACg8ocKE6wuhPwKtLL1OYukd9nYihfPEaMRruXtOfyD6OJJHkP9lfQ=s96-c",
+    "department": null,
+    "created_at": "2026-02-12T09:53:37.131910+00:00"
+  }
+]

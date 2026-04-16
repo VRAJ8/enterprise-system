@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # Import ONLY the brain functions from your other file
-from agent_service import run_deadline_check, handle_chat_query
+from agent_service import run_deadline_check, handle_ai_logic
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -51,7 +51,7 @@ app.include_router(users_router)
 @app.post("/api/ai/chat")
 async def chat_with_ai(payload: dict = Body(...)):
     user_message = payload.get("message")
-    ai_response = handle_chat_query(user_message)
+    ai_response = await handle_ai_logic(user_message)
     return {"reply": ai_response}
 
 @app.get("/api/ai/trigger-scan")
