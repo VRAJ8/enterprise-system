@@ -71,7 +71,7 @@ async def startup():
     # ... (rest of your existing indexes)
     
     # Start the Proactive AI Scheduler
-    scheduler.add_job(run_deadline_check, 'cron', hour=9, minute=0)
+    scheduler.add_job(run_deadline_check, 'interval', minutes=30)
     scheduler.start()
 
 @app.on_event("shutdown")
