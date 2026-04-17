@@ -4,6 +4,7 @@ import { Bot, X, Send, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardContent, CardFooter } from './ui/card';
 import { Input } from './ui/input';
+import api from '../lib/api';
 
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,13 +31,8 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
-      });
-      const data = await response.json();
-      setMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
+      const response = await api.post("/ai/chat", { message: input });
+      setMessages(prev => [...prev, { role: 'ai', text: response.data.reply }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'ai', text: "Sorry, I'm having trouble connecting to the server." }]);
     } finally {
