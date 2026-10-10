@@ -152,3 +152,13 @@ async def test_delete_project_cleans_up(ws, client):
     assert await database.db.tasks.count_documents({}) == 0
     assert await database.db.comments.count_documents({}) == 0
     assert await database.db.chat_channels.count_documents({}) == 0
+
+
+async def test_my_work_review_queue_for_managers(ws, client):
+    p = await make_project(client, ws.pm, team_members=[ws.member["id"]])
+    t = await make_task(client, ws.pm, p["project_id"], assigned_to=ws.member["id"])
+    await client.put(f"/api/tasks/{t['task_id']}", json={"status": "in_review"}, headers=ws.member["headers"])
+    pm_work = (await client.get("/api/tasks/my-work", headers=ws.pm["headers"])).json()
+    assert [x["task_id"] for x in pm_work["groups"]["review"]] == [t["task_id"]]
+    member_work = (await client.get("/api/tasks/my-work", headers=ws.member["headers"])).json()
+    assert member_work["groups"]["review"] == []

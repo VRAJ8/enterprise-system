@@ -91,7 +91,9 @@ def require_role(allowed_roles: list):
 
 
 def public_user(user: dict) -> dict:
-    return {k: v for k, v in user.items() if k not in ("password", "_id")}
+    out = {k: v for k, v in user.items() if k not in ("password", "_id")}
+    out["has_password"] = bool(user.get("password"))
+    return out
 
 
 async def current_user(request: Request) -> dict:

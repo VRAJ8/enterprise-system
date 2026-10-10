@@ -1,221 +1,181 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
-import { projectsApi, usersApi } from '../lib/api';
+import { projectsApi, errorMessage } from '../lib/api';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Badge } from '../components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Textarea } from '../components/ui/textarea';
-import { Calendar } from '../components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
-import { Plus, Search, FolderKanban, CalendarIcon, Users, MoreVertical, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
+import { Plus, Search, FolderKanban, Users, MoreVertical, Trash2, Edit2, AlertTriangle, CalendarDays } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { format } from 'date-fns';
+import ProjectFormDialog from '../components/ProjectFormDialog';
+import { HealthBadge, ProjectStatusBadge, ProgressBar, EmptyState } from '../components/common';
+import { PROJECT_STATUSES, projectStatusConfig, priorityConfig, healthConfig, formatDate, daysUntil } from '../lib/constants';
 
-const priorityColors = {
-  low: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  medium: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  high: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-  critical: 'bg-red-500/10 text-red-400 border-red-500/20',
-};
-const statusColors = {
-  active: 'bg-emerald-500/10 text-emerald-400',
-  completed: 'bg-blue-500/10 text-blue-400',
-  on_hold: 'bg-amber-500/10 text-amber-400',
-  cancelled: 'bg-red-500/10 text-red-400',
-};
+const ALL = 'all';
+const OPEN = 'open';
 
 export default function Projects() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
-  const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState(OPEN);
+  const [healthFilter, setHealthFilter] = useState(ALL);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ name: '', description: '', priority: 'medium', start_date: '', end_date: '', team_members: [] });
-  const [endDate, setEndDate] = useState(null);
 
-  const canManage = user?.role === 'admin' || user?.role === 'project_manager';
+  const canCreate = user?.role === 'admin' || user?.role === 'project_manager';
 
-  useEffect(() => {
-    loadData();
+  const load = useCallback(async () => {
+    try {
+      setProjects((await projectsApi.list()).data);
+    } catch (err) {
+      toast.error(errorMessage(err, 'Could not load projects'));
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const loadData = async () => {
+  useEffect(() => { load(); }, [load]);
+
+  const handleDelete = async (p) => {
+    if (!window.confirm(`Delete "${p.name}" and all of its tasks, milestones, comments and files? This cannot be undone.`)) return;
     try {
-      const [p, u] = await Promise.all([projectsApi.list(), usersApi.list()]);
-      setProjects(p.data);
-      setUsers(u.data);
-    } catch {} finally {
-      setLoading(false);
+      await projectsApi.delete(p.project_id);
+      toast.success('Project deleted');
+      load();
+    } catch (err) {
+      toast.error(errorMessage(err));
     }
   };
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    try {
-      const payload = { ...form };
-      if (endDate) payload.end_date = format(endDate, 'yyyy-MM-dd');
-      await projectsApi.create(payload);
-      setOpen(false);
-      setForm({ name: '', description: '', priority: 'medium', start_date: '', end_date: '', team_members: [] });
-      setEndDate(null);
-      loadData();
-    } catch {}
-  };
+  const filtered = useMemo(() => projects.filter((p) => {
+    if (!p.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (statusFilter === OPEN && ['completed', 'cancelled'].includes(p.status)) return false;
+    if (![ALL, OPEN].includes(statusFilter) && p.status !== statusFilter) return false;
+    if (healthFilter !== ALL && p.health !== healthFilter) return false;
+    return true;
+  }), [projects, search, statusFilter, healthFilter]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this project and all its tasks?')) return;
-    try { await projectsApi.delete(id); loadData(); } catch {}
-  };
-
-  const filtered = projects.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+  const atRisk = projects.filter((p) => ['at_risk', 'off_track'].includes(p.health)).length;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6" data-testid="projects-page">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5" data-testid="projects-page">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold font-['Outfit'] tracking-tight">Projects</h2>
-          <p className="text-sm text-muted-foreground">{projects.length} total projects</p>
+          <p className="text-sm text-muted-foreground">
+            {projects.length} projects{atRisk > 0 && <span className="text-amber-400"> · {atRisk} need attention</span>}
+          </p>
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search projects..." value={search} onChange={e => setSearch(e.target.value)}
-              className="pl-9" data-testid="project-search" />
-          </div>
-          {canManage && (
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90 shadow-[0_0_12px_rgba(99,102,241,0.3)] gap-1" data-testid="create-project-btn">
-                  <Plus size={16} /> New
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-lg">
-                <DialogHeader><DialogTitle className="font-['Outfit']">Create Project</DialogTitle></DialogHeader>
-                <form onSubmit={handleCreate} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Name</Label>
-                    <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required data-testid="project-name-input" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Description</Label>
-                    <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} data-testid="project-desc-input" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Priority</Label>
-                      <Select value={form.priority} onValueChange={v => setForm({...form, priority: v})}>
-                        <SelectTrigger data-testid="project-priority-select"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="critical">Critical</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Deadline</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start text-left font-normal" data-testid="project-deadline-btn">
-                            <CalendarIcon size={14} className="mr-2" />
-                            {endDate ? format(endDate, 'PP') : 'Pick date'}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar mode="single" selected={endDate} onSelect={setEndDate} />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Team Members</Label>
-                    <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border rounded-md border-border">
-                      {users.filter(u => u.user_id !== user?.user_id).map(u => (
-                        <label key={u.user_id} className="flex items-center gap-1.5 text-xs cursor-pointer bg-secondary/50 px-2 py-1 rounded-md hover:bg-secondary">
-                          <input type="checkbox" checked={form.team_members.includes(u.user_id)}
-                            onChange={e => {
-                              const members = e.target.checked
-                                ? [...form.team_members, u.user_id]
-                                : form.team_members.filter(m => m !== u.user_id);
-                              setForm({...form, team_members: members});
-                            }} className="rounded" />
-                          {u.name}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <Button type="submit" className="w-full bg-primary" data-testid="project-create-submit">Create Project</Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-          )}
+        {canCreate && (
+          <Button className="gap-1" onClick={() => { setEditing(null); setFormOpen(true); }} data-testid="create-project-btn">
+            <Plus size={16} /> New project
+          </Button>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <div className="relative w-full sm:w-64">
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input placeholder="Search projects…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-8 text-sm" data-testid="project-search" />
         </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-40 h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value={OPEN}>Open projects</SelectItem>
+            <SelectItem value={ALL}>All statuses</SelectItem>
+            {PROJECT_STATUSES.map((s) => <SelectItem key={s} value={s}>{projectStatusConfig[s].label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={healthFilter} onValueChange={setHealthFilter}>
+          <SelectTrigger className="w-36 h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Any health</SelectItem>
+            {['on_track', 'at_risk', 'off_track'].map((h) => <SelectItem key={h} value={h}>{healthConfig[h].label}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {[1,2,3].map(i => <Card key={i} className="h-40 bg-card/50 animate-pulse" />)}
+          {[1, 2, 3].map((i) => <Card key={i} className="h-44 bg-card/50 animate-pulse" />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <FolderKanban size={48} className="mx-auto text-muted-foreground/40 mb-4" />
-          <p className="text-muted-foreground">No projects found</p>
-        </div>
+        <EmptyState icon={FolderKanban}
+          title={projects.length ? 'No projects match these filters' : 'No projects yet'}
+          description={projects.length ? 'Try clearing the filters.' : canCreate ? 'Create your first project to start planning work.' : "You'll see projects here once you're added to a team."}
+          action={!projects.length && canCreate && <Button size="sm" onClick={() => setFormOpen(true)}><Plus size={14} className="mr-1" /> New project</Button>} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" data-testid="projects-grid">
-          {filtered.map((p, i) => (
-            <motion.div key={p.project_id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}>
-              <Card className="bg-card/70 border-border/40 hover:border-primary/30 transition-all cursor-pointer group"
-                onClick={() => navigate(`/projects/${p.project_id}`)} data-testid={`project-card-${p.project_id}`}>
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold font-['Outfit'] truncate group-hover:text-primary transition-colors">{p.name}</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{p.description || 'No description'}</p>
+          {filtered.map((p, i) => {
+            const days = daysUntil(p.end_date);
+            const stats = p.task_stats || {};
+            return (
+              <motion.div key={p.project_id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 10) * 0.04 }}>
+                <Card className="bg-card/70 border-border/40 hover:border-primary/30 transition-all cursor-pointer group h-full"
+                  onClick={() => navigate(`/projects/${p.project_id}`)} data-testid={`project-card-${p.project_id}`}>
+                  <CardContent className="p-5 flex flex-col h-full">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold font-['Outfit'] truncate group-hover:text-primary transition-colors">{p.name}</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{p.description || 'No description'}</p>
+                      </div>
+                      {p.can_manage && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-60 group-hover:opacity-100" aria-label="Project actions">
+                              <MoreVertical size={14} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => { setEditing(p); setFormOpen(true); }}>
+                              <Edit2 size={14} className="mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDelete(p)} className="text-destructive" data-testid={`delete-project-${p.project_id}`}>
+                              <Trash2 size={14} className="mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
-                    {canManage && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
-                            <MoreVertical size={14} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem onClick={e => { e.stopPropagation(); handleDelete(p.project_id); }}
-                            className="text-destructive" data-testid={`delete-project-${p.project_id}`}>
-                            <Trash2 size={14} className="mr-2" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="outline" className={priorityColors[p.priority]}>{p.priority}</Badge>
-                    <Badge variant="outline" className={statusColors[p.status] || statusColors.active}>{p.status?.replace('_', ' ')}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Users size={12} />
-                      <span>{p.team_members?.length || 0} members</span>
+
+                    <div className="flex items-center gap-1.5 flex-wrap mb-4">
+                      <ProjectStatusBadge status={p.status} />
+                      <HealthBadge health={p.health} reason={p.reason} />
+                      <span className={`text-[11px] ${priorityConfig[p.priority]?.color}`}>{priorityConfig[p.priority]?.label}</span>
                     </div>
-                    {p.end_date && <span>Due {p.end_date}</span>}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+
+                    <div className="mt-auto space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">{stats.completed || 0}/{stats.total || 0} tasks</span>
+                        <span className="font-medium">{p.progress}%</span>
+                      </div>
+                      <ProgressBar value={p.progress} />
+                      {p.reason && <p className="text-[11px] text-amber-400/90 flex items-center gap-1"><AlertTriangle size={11} /> {p.reason}</p>}
+                      <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                        <span className="flex items-center gap-1"><Users size={12} /> {p.team_members?.length || 0}</span>
+                        {p.end_date && (
+                          <span className={`flex items-center gap-1 ${days < 0 && !['completed', 'cancelled'].includes(p.status) ? 'text-red-400' : ''}`}>
+                            <CalendarDays size={12} /> {formatDate(p.end_date)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       )}
+
+      <ProjectFormDialog open={formOpen} onOpenChange={setFormOpen} project={editing}
+        onSaved={(p) => (editing ? load() : navigate(`/projects/${p.project_id}`))} />
     </motion.div>
   );
 }

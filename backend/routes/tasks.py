@@ -7,7 +7,7 @@ from auth_utils import get_current_user, current_user
 from helpers import log_activity, notify_task_assigned, create_notification, now_iso
 from permissions import (
     require_project_manage, visible_task_query, can_edit_task, can_update_task_progress,
-    can_view_project,
+    can_view_project, can_manage_project,
 )
 from insights import is_overdue, today_str
 
@@ -123,6 +123,20 @@ async def my_work(request: Request):
     prio = {"critical": 0, "high": 1, "medium": 2, "low": 3}
     for items in groups.values():
         items.sort(key=lambda x: (x.get("due_date") or "9999", prio.get(x.get("priority"), 9)))
+
+    # Managers: work their team has handed over for review
+    review = []
+    if user["role"] in ("admin", "project_manager"):
+        manageable = [p for p in await db.projects.find(
+            {} if user["role"] == "admin" else {"$or": [{"team_members": user["user_id"]}, {"created_by": user["user_id"]}]},
+            {"_id": 0}).to_list(5000) if can_manage_project(user, p)]
+        by_id = {p["project_id"]: p for p in manageable}
+        review = await db.tasks.find({
+            "status": "in_review", "project_id": {"$in": list(by_id)}, "assigned_to": {"$ne": user["user_id"]},
+        }, {"_id": 0}).sort("updated_at", 1).to_list(200)
+        for task in review:
+            _decorate(task, user, by_id.get(task["project_id"]), t)
+    groups["review"] = review
 
     completed_week = await db.tasks.count_documents({
         "assigned_to": user["user_id"], "status": "completed",
