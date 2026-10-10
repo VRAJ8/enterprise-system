@@ -162,3 +162,10 @@ async def test_my_work_review_queue_for_managers(ws, client):
     assert [x["task_id"] for x in pm_work["groups"]["review"]] == [t["task_id"]]
     member_work = (await client.get("/api/tasks/my-work", headers=ws.member["headers"])).json()
     assert member_work["groups"]["review"] == []
+
+
+async def test_legacy_statuses_are_migrated():
+    await database.db.tasks.insert_many([{"task_id": "a", "status": "done"}, {"task_id": "b", "status": "weird"}])
+    await database.migrate_legacy_data()
+    assert (await database.db.tasks.find_one({"task_id": "a"}))["status"] == "completed"
+    assert (await database.db.tasks.find_one({"task_id": "b"}))["status"] == "todo"

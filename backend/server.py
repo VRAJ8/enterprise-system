@@ -5,7 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config import CORS_ORIGINS, DEADLINE_SCAN_MINUTES, UPLOAD_DIR, GROQ_API_KEY
-from database import client, ensure_indexes
+from database import client, ensure_indexes, migrate_legacy_data
 from auth_utils import current_user
 from models import AIChatRequest
 from agent_service import run_deadline_check, handle_ai_logic, AIUnavailable
@@ -27,6 +27,7 @@ scheduler = AsyncIOScheduler()
 async def lifespan(app: FastAPI):
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     await ensure_indexes()
+    await migrate_legacy_data()
     scheduler.add_job(run_deadline_check, "interval", minutes=DEADLINE_SCAN_MINUTES, id="deadline_scan",
                       replace_existing=True)
     scheduler.start()

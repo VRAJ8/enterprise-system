@@ -33,3 +33,11 @@ async def ensure_indexes():
             await db[collection].create_index(keys, **opts)
         except Exception as e:  # e.g. existing duplicate data blocks a unique index
             logger.warning("Could not create index %s on %s: %s", keys, collection, e)
+
+
+async def migrate_legacy_data():
+    """One-off fixes for data written by earlier versions (safe to run on every start)."""
+    # The old AI agent wrote statuses the app doesn't use
+    await db.tasks.update_many({"status": "done"}, {"$set": {"status": "completed"}})
+    await db.tasks.update_many({"status": {"$nin": ["todo", "in_progress", "in_review", "completed"]}},
+                               {"$set": {"status": "todo"}})
