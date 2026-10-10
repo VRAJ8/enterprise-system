@@ -1,244 +1,245 @@
-# backend/agent_service.py
-import os
+"""AI project assistant (Groq) and the proactive deadline scanner.
+
+The assistant only sees data the requesting user can see, and every action it
+takes goes through the same route handlers (and permission checks) as the UI.
+"""
 import json
-from groq import Groq
-from dotenv import load_dotenv
-import asyncio
-from datetime import datetime, timezone, timedelta
+import logging
+from datetime import date, timedelta
+from fastapi import HTTPException
+from pydantic import ValidationError
+from database import db
+from config import GROQ_API_KEY, GROQ_MODEL
+from models import ProjectCreate, TaskCreate, TaskUpdate
+from permissions import visible_project_ids, visible_task_query, is_manager
+from helpers import create_notification
 
-load_dotenv()
+logger = logging.getLogger(__name__)
 
-# 1. Initialize Groq (Fast & Reliable)
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+MAX_TOOL_ROUNDS = 4
 
-# 2. Context Fetcher (The AI's "Eyes")
-async def fetch_system_data():
-    from database import db
-    # Fetch Data for Context
-    tasks = await db.tasks.find({}, {"task_id": 1, "title": 1, "status": 1, "due_date": 1, "project_id": 1, "assigned_to": 1}).to_list(50)
-    users = await db.users.find({}, {"user_id": 1, "name": 1, "email": 1}).to_list(50)
-    projects = await db.projects.find({}, {"project_id": 1, "name": 1, "status": 1}).to_list(50)
-    
-    return json.dumps({
-        "tasks": tasks,
-        "users": users,
-        "projects": projects
-    }, default=str)
+_client = None
 
-# 3. The Core Logic (Reactive)
-async def handle_ai_logic(user_prompt, system_type="chat"):
-    from database import db
-    from models import gen_id
-    from helpers import notify_task_assigned, log_activity
 
-    real_data = await fetch_system_data()
-    
-    system_message = f"""
-    You are the Enterprise System AI Manager. 
-    Current System Data: {real_data}
-    Role: Help the user manage the system. You have full capability to answer questions about users' workload, project status, and task details.
-    If the user asks you to perform an action (create project, create task, reassign task, or update status), ALWAYS use the provided tools to execute the action. 
-    Always reply with a friendly conversational message explaining what you did or answering the user's question clearly.
-    """
+class AIUnavailable(Exception):
+    pass
 
-    tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "update_task_status",
-                "description": "Updates the status of a task.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "task_id": {"type": "string", "description": "The ID of the task to update."},
-                        "status": {"type": "string", "enum": ["todo", "in_progress", "in_review", "done"], "description": "The new status."}
-                    },
-                    "required": ["task_id", "status"]
-                }
-            }
+
+def _get_client():
+    global _client
+    if not GROQ_API_KEY:
+        raise AIUnavailable("The AI assistant isn't configured. Set GROQ_API_KEY on the server to enable it.")
+    if _client is None:
+        from groq import AsyncGroq
+        _client = AsyncGroq(api_key=GROQ_API_KEY)
+    return _client
+
+
+async def fetch_context(user: dict) -> str:
+    """Compact snapshot of the projects, tasks and people this user can see."""
+    proj_ids = await visible_project_ids(user)
+    pq = {} if proj_ids is None else {"project_id": {"$in": proj_ids}}
+    projects = await db.projects.find(
+        pq, {"_id": 0, "project_id": 1, "name": 1, "status": 1, "priority": 1, "end_date": 1, "team_members": 1}
+    ).to_list(100)
+    tasks = await db.tasks.find(
+        await visible_task_query(user),
+        {"_id": 0, "task_id": 1, "title": 1, "status": 1, "priority": 1, "due_date": 1,
+         "project_id": 1, "assigned_to": 1, "assigned_to_name": 1, "estimate_hours": 1},
+    ).sort("updated_at", -1).to_list(200)
+    member_ids = {m for p in projects for m in p.get("team_members", [])} | {user["user_id"]}
+    users = await db.users.find(
+        {} if user["role"] == "admin" else {"user_id": {"$in": list(member_ids)}},
+        {"_id": 0, "user_id": 1, "name": 1, "role": 1, "department": 1},
+    ).to_list(200)
+    return json.dumps({"today": date.today().isoformat(), "projects": projects, "tasks": tasks, "users": users},
+                      default=str)
+
+
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "create_project",
+            "description": "Create a new project. Only admins and project managers can do this.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "description": {"type": "string"},
+                    "priority": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+                    "end_date": {"type": "string", "description": "Deadline, YYYY-MM-DD"},
+                    "team_members": {"type": "array", "items": {"type": "string"}, "description": "User IDs"},
+                },
+                "required": ["name"],
+            },
         },
-        {
-            "type": "function",
-            "function": {
-                "name": "create_project",
-                "description": "Create a new project.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "name": {"type": "string", "description": "Name of the project."},
-                        "description": {"type": "string", "description": "Project description."}
-                    },
-                    "required": ["name"]
-                }
-            }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_task",
+            "description": "Create a task in a project.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "project_id": {"type": "string"},
+                    "assigned_to": {"type": "string", "description": "User ID of the assignee"},
+                    "priority": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+                    "due_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    "estimate_hours": {"type": "number"},
+                },
+                "required": ["title", "project_id"],
+            },
         },
-        {
-            "type": "function",
-            "function": {
-                "name": "create_task",
-                "description": "Create a new task.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "title": {"type": "string", "description": "Task title."},
-                        "description": {"type": "string", "description": "Task description."},
-                        "project_id": {"type": "string", "description": "ID of the project this task belongs to."},
-                        "assigned_to": {"type": "string", "description": "User ID of the assignee (optional)."}
-                    },
-                    "required": ["title", "project_id"]
-                }
-            }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "update_task",
+            "description": "Update a task: change status, reassign, reprioritise or change the due date. "
+                           "Only include fields that should change.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_id": {"type": "string"},
+                    "status": {"type": "string", "enum": ["todo", "in_progress", "in_review", "completed"]},
+                    "assigned_to": {"type": "string", "description": "User ID of the new assignee"},
+                    "priority": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+                    "due_date": {"type": "string", "description": "YYYY-MM-DD"},
+                },
+                "required": ["task_id"],
+            },
         },
-        {
-            "type": "function",
-            "function": {
-                "name": "reassign_task",
-                "description": "Reassigns a task to a different user.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "task_id": {"type": "string", "description": "The ID of the task."},
-                        "assigned_to": {"type": "string", "description": "The new assignee's User ID."}
-                    },
-                    "required": ["task_id", "assigned_to"]
-                }
-            }
-        }
-    ]
+    },
+]
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {"role": "system", "content": system_message},
-            {"role": "user", "content": user_prompt},
-        ],
-        temperature=0.2,
-        tools=tools,
-        tool_choice="auto",
+
+async def _run_tool(name: str, args: dict, user: dict) -> dict:
+    # Imported here to avoid a circular import (routes import helpers that import models)
+    from routes.projects import create_project
+    from routes.tasks import create_task, update_task
+
+    try:
+        if name == "create_project":
+            p = await create_project(ProjectCreate(**args), user=user)
+            return {"ok": True, "project_id": p["project_id"], "name": p["name"]}
+        if name == "create_task":
+            t = await create_task(TaskCreate(**args), user=user)
+            return {"ok": True, "task_id": t["task_id"], "title": t["title"], "assigned_to": t.get("assigned_to_name")}
+        if name == "update_task":
+            task_id = args.pop("task_id")
+            t = await update_task(task_id, TaskUpdate(**args), user=user)
+            return {"ok": True, "task_id": t["task_id"], "title": t["title"], "status": t["status"],
+                    "assigned_to": t.get("assigned_to_name"), "due_date": t.get("due_date")}
+        return {"ok": False, "error": f"Unknown tool {name}"}
+    except HTTPException as e:
+        return {"ok": False, "error": e.detail}
+    except ValidationError as e:
+        return {"ok": False, "error": f"Invalid arguments: {e.errors()[0].get('msg')}"}
+
+
+async def handle_ai_logic(user: dict, user_prompt: str, history: list[dict] | None = None) -> dict:
+    """Run one assistant turn. Returns {"reply": str, "actions": [...]}."""
+    client = _get_client()
+    context = await fetch_context(user)
+    role_note = ("You may create projects and tasks and edit any task in the user's projects."
+                 if is_manager(user) else
+                 "This user is a team member: they can only change the status of tasks assigned to them. "
+                 "Don't offer to create projects or tasks for them.")
+    system_message = (
+        "You are ProjectHub's project assistant, helping a professional team plan and deliver work.\n"
+        f"You are talking to {user['name']} (role: {user['role']}, user_id: {user['user_id']}). {role_note}\n"
+        "Use the data below to answer questions about workload, deadlines, priorities and progress. "
+        "Be concise and specific: name tasks, people and dates. Prefer short bullet lists.\n"
+        "When the user asks you to change something, call the matching tool. Use real IDs from the data; "
+        "if a request is ambiguous (e.g. several tasks match), ask a clarifying question instead of guessing. "
+        "Never claim an action succeeded unless the tool result says ok.\n"
+        f"Workspace data (JSON): {context}"
     )
-    
-    message = response.choices[0].message
-    
-    # Execute Tools if chosen
-    if message.tool_calls:
-        for tool_call in message.tool_calls:
-            args = json.loads(tool_call.function.arguments)
-            now_iso = datetime.now(timezone.utc).isoformat()
-            
-            if tool_call.function.name == "update_task_status":
-                if args.get("task_id") and args.get("status"):
-                    await db.tasks.update_one(
-                        {"task_id": args["task_id"]}, 
-                        {"$set": {"status": args["status"], "updated_at": now_iso}}
-                    )
 
-            elif tool_call.function.name == "create_project":
-                project_id = gen_id("proj_")
-                project = {
-                    "project_id": project_id,
-                    "name": args.get("name"),
-                    "description": args.get("description", ""),
-                    "priority": "medium",
-                    "status": "planning",
-                    "team_members": [],
-                    "created_by": "system_ai",
-                    "created_at": now_iso,
-                    "updated_at": now_iso
-                }
-                await db.projects.insert_one(project)
+    messages = [{"role": "system", "content": system_message}]
+    for h in (history or [])[-10:]:
+        role = "assistant" if h.get("role") in ("ai", "assistant") else "user"
+        text = str(h.get("text") or h.get("content") or "")[:2000]
+        if text:
+            messages.append({"role": role, "content": text})
+    messages.append({"role": "user", "content": user_prompt})
 
-            elif tool_call.function.name == "create_task":
-                task_id = gen_id("task_")
-                project = await db.projects.find_one({"project_id": args.get("project_id")})
-                
-                assignee_name = None
-                if args.get("assigned_to"):
-                    assignee = await db.users.find_one({"user_id": args["assigned_to"]})
-                    if assignee:
-                        assignee_name = assignee["name"]
+    actions = []
+    try:
+        for _ in range(MAX_TOOL_ROUNDS):
+            response = await client.chat.completions.create(
+                model=GROQ_MODEL, messages=messages, temperature=0.2, tools=TOOLS, tool_choice="auto",
+            )
+            message = response.choices[0].message
+            if not message.tool_calls:
+                return {"reply": message.content or "", "actions": actions}
 
-                task = {
-                    "task_id": task_id,
-                    "title": args.get("title"),
-                    "description": args.get("description", ""),
-                    "project_id": args.get("project_id"),
-                    "project_name": project.get("name") if project else "Unknown Project",
-                    "assigned_to": args.get("assigned_to"),
-                    "assigned_to_name": assignee_name,
-                    "priority": "medium",
-                    "status": "todo",
-                    "due_date": None,
-                    "created_by": "system_ai",
-                    "created_at": now_iso,
-                    "updated_at": now_iso
-                }
-                await db.tasks.insert_one(task)
-                if assignee_name:
-                    from helpers import notify_task_assigned
-                    assignee = await db.users.find_one({"user_id": args.get("assigned_to")})
-                    await notify_task_assigned(task, assignee, "System AI")
-
-            elif tool_call.function.name == "reassign_task":
-                assignee = await db.users.find_one({"user_id": args.get("assigned_to")})
-                task = await db.tasks.find_one({"task_id": args.get("task_id")})
-                if assignee and task:
-                    await db.tasks.update_one(
-                        {"task_id": task["task_id"]},
-                        {"$set": {"assigned_to": assignee["user_id"], "assigned_to_name": assignee["name"], "updated_at": now_iso}}
-                    )
-                    from helpers import notify_task_assigned
-                    await notify_task_assigned(task, assignee, "System AI")
-        
-        if message.content:
-            return message.content
-        return "I have successfully completed the action requested!"
-
-    return message.content
-
-# 4. Proactive Logic
-def handle_chat_query(msg):
-    return asyncio.run(handle_ai_logic(msg))
-
-async def async_run_deadline_check():
-    from database import db
-    from helpers import create_notification
-    
-    now = datetime.now(timezone.utc)
-    target_date = now + timedelta(days=2)
-    now_iso = now.isoformat()
-    target_iso = target_date.isoformat()
-
-    # Find tasks due in less than 48 hours that are not done
-    urgent_tasks = await db.tasks.find({
-        "status": {"$ne": "done"},
-        "due_date": {"$ne": None},
-        "due_date": {"$gte": now_iso, "$lte": target_iso}
-    }).to_list(100)
-
-    alerts_sent = 0
-    for task in urgent_tasks:
-        if task.get("assigned_to"):
-            message_text = f"Reminder: The task '{task['title']}' is due soon."
-            
-            # Prevent duplicate notifications for the same task
-            existing_notif = await db.notifications.find_one({
-                "user_id": task["assigned_to"],
-                "type": "deadline_warning",
-                "message": message_text
+            messages.append({
+                "role": "assistant",
+                "content": message.content or "",
+                "tool_calls": [
+                    {"id": tc.id, "type": "function",
+                     "function": {"name": tc.function.name, "arguments": tc.function.arguments}}
+                    for tc in message.tool_calls
+                ],
             })
-            
-            if not existing_notif:
-                await create_notification(
-                    user_id=task["assigned_to"],
-                    notif_type="deadline_warning",
-                    title="Upcoming Deadline!",
-                    message=message_text,
-                    link=f"/tasks"
-                )
-                alerts_sent += 1
-            
-    print(f"PROACTIVE ALERT: Sent {alerts_sent} deadline notifications.")
-    return f"Sent {alerts_sent} deadline notifications."
+            for tc in message.tool_calls:
+                try:
+                    args = json.loads(tc.function.arguments or "{}")
+                except json.JSONDecodeError:
+                    args = {}
+                result = await _run_tool(tc.function.name, args, user)
+                actions.append({"tool": tc.function.name, **result})
+                messages.append({"role": "tool", "tool_call_id": tc.id, "content": json.dumps(result)})
+    except AIUnavailable:
+        raise
+    except Exception as e:
+        logger.exception("AI request failed")
+        raise AIUnavailable("The AI service is unreachable right now. Please try again shortly.") from e
 
-def run_deadline_check():
-    return asyncio.run(async_run_deadline_check())
+    return {"reply": "I made the changes listed below.", "actions": actions}
+
+
+# ─── Proactive deadline scanner ───
+
+async def run_deadline_check() -> dict:
+    """Notify assignees about tasks due within 2 days, and assignees + owners about overdue tasks.
+
+    Each (task, due date, kind) is notified at most once, so rescheduling a task re-arms its reminder.
+    """
+    today = date.today()
+    soon = (today + timedelta(days=2)).isoformat()
+    t = today.isoformat()
+
+    tasks = await db.tasks.find({
+        "status": {"$ne": "completed"},
+        "due_date": {"$nin": [None, ""], "$lte": soon},
+    }, {"_id": 0}).to_list(5000)
+
+    sent = 0
+    for task in tasks:
+        due = task["due_date"][:10]
+        overdue = due < t
+        kind = "deadline_overdue" if overdue else "deadline_warning"
+        recipients = {task.get("assigned_to")}
+        if overdue:
+            recipients.add(task.get("created_by"))
+        for uid in recipients - {None, "", "system_ai"}:
+            key = f"{task['task_id']}:{due}"
+            if await db.notifications.find_one({"user_id": uid, "type": kind, "ref_id": key}):
+                continue
+            if overdue:
+                title, msg = "Task Overdue", f"'{task['title']}' was due {due} and isn't completed yet."
+            elif due == t:
+                title, msg = "Due Today", f"'{task['title']}' is due today."
+            else:
+                title, msg = "Upcoming Deadline", f"'{task['title']}' is due {due}."
+            await create_notification(uid, kind, title, msg, link=f"/tasks?task={task['task_id']}", ref_id=key)
+            sent += 1
+
+    logger.info("Deadline scan: %d notifications sent", sent)
+    return {"notifications_sent": sent, "tasks_checked": len(tasks)}

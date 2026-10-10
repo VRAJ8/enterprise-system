@@ -1,19 +1,35 @@
+import logging
 from motor.motor_asyncio import AsyncIOMotorClient
-import os
-from dotenv import load_dotenv
-from pathlib import Path
+from config import MONGO_URL, DB_NAME
 
-# Load environment variables from the .env file in the current directory
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+logger = logging.getLogger(__name__)
 
-# 1. Get the Connection String
-# This looks for 'MONGO_URL' in your .env file
-mongo_url = os.environ.get('MONGO_URL')
+client = AsyncIOMotorClient(MONGO_URL)
+db = client[DB_NAME]
 
-# 2. Initialize the Client
-client = AsyncIOMotorClient(mongo_url)
+INDEXES = [
+    ("users", "user_id", {"unique": True}),
+    ("users", "email", {"unique": True}),
+    ("projects", "project_id", {"unique": True}),
+    ("projects", "team_members", {}),
+    ("tasks", "task_id", {"unique": True}),
+    ("tasks", [("project_id", 1), ("status", 1)], {}),
+    ("tasks", "assigned_to", {}),
+    ("milestones", "project_id", {}),
+    ("notifications", [("user_id", 1), ("created_at", -1)], {}),
+    ("chat_channels", "channel_id", {"unique": True}),
+    ("chat_channels", "members", {}),
+    ("chat_messages", [("channel_id", 1), ("created_at", -1)], {}),
+    ("comments", [("entity_type", 1), ("entity_id", 1)], {}),
+    ("files", [("entity_type", 1), ("entity_id", 1)], {}),
+    ("activity_logs", [("project_id", 1), ("created_at", -1)], {}),
+    ("user_sessions", "session_token", {}),
+]
 
-# 3. Set the Database Name 
-# We use the actual name 'Enterprise-Management-System' directly as the database name
-db = client['Enterprise-Management-System']
+
+async def ensure_indexes():
+    for collection, keys, opts in INDEXES:
+        try:
+            await db[collection].create_index(keys, **opts)
+        except Exception as e:  # e.g. existing duplicate data blocks a unique index
+            logger.warning("Could not create index %s on %s: %s", keys, collection, e)

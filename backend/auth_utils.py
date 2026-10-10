@@ -1,11 +1,9 @@
 import jwt
 import bcrypt
-import os
 from datetime import datetime, timezone, timedelta
 from fastapi import Request, HTTPException
 from database import db
-
-JWT_SECRET = os.environ.get('JWT_SECRET', 'fallback-secret')
+from config import JWT_SECRET, JWT_EXPIRY_DAYS
 
 
 def hash_password(password: str) -> str:
@@ -13,7 +11,12 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode(), hashed.encode())
+    if not hashed:
+        return False  # OAuth-only accounts have no password
+    try:
+        return bcrypt.checkpw(password.encode(), hashed.encode())
+    except ValueError:
+        return False
 
 
 def create_token(user_id: str, email: str, role: str, name: str) -> str:
@@ -22,7 +25,7 @@ def create_token(user_id: str, email: str, role: str, name: str) -> str:
         "email": email,
         "role": role,
         "name": name,
-        "exp": datetime.now(timezone.utc) + timedelta(days=7)
+        "exp": datetime.now(timezone.utc) + timedelta(days=JWT_EXPIRY_DAYS)
     }
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
@@ -34,6 +37,14 @@ def decode_token(token: str) -> dict:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
+def _active(user: dict | None) -> dict:
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    if user.get("disabled"):
+        raise HTTPException(status_code=401, detail="Account is deactivated")
+    return user
 
 
 async def get_current_user(request: Request) -> dict:
@@ -54,22 +65,20 @@ async def get_current_user(request: Request) -> dict:
                     {"user_id": session["user_id"]}, {"_id": 0}
                 )
                 if user:
-                    return user
+                    return _active(user)
 
     # Check Authorization header (JWT)
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Not authenticated")
 
-    token = auth_header.split(" ")[1]
+    token = auth_header.split(" ", 1)[1]
     payload = decode_token(token)
 
     user = await db.users.find_one(
         {"user_id": payload["user_id"]}, {"_id": 0}
     )
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
+    return _active(user)
 
 
 def require_role(allowed_roles: list):
@@ -79,3 +88,12 @@ def require_role(allowed_roles: list):
             raise HTTPException(status_code=403, detail="Insufficient permissions")
         return user
     return role_checker
+
+
+def public_user(user: dict) -> dict:
+    return {k: v for k, v in user.items() if k not in ("password", "_id")}
+
+
+async def current_user(request: Request) -> dict:
+    """FastAPI dependency form of get_current_user."""
+    return await get_current_user(request)

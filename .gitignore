@@ -77,11 +77,13 @@ agenthub/agents/youtube/db
 .cache/
 
 # Mobile development
-android-sdk/ frontend/node_modules/.cache/default-development/2.pack
-frontend/node_modules/.cache/default-development/2.pack
-frontend/node_modules/.cache/default-development/4.pack
--e 
+android-sdk/
+
 # Environment files
 *.env
 *.env.*
-frontend/node_modules/.cache/default-development/0.pack
+!*.env.example
+
+# App data
+backend/uploads/
+.pytest_cache/
