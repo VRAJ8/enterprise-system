@@ -1,12 +1,14 @@
 import uuid
 from datetime import date, datetime
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, StringConstraints, model_validator
 
 from app.models.enums import Priority
 from app.schemas.common import MilestoneBrief, ProjectBrief, Schema, StatusBrief, TaskBrief, UserBrief
 from app.schemas.workspace import LabelOut
+
+TaskTitle = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)]
 
 
 class TaskOut(Schema):
@@ -54,7 +56,7 @@ class TaskDetail(TaskOut):
 
 
 class TaskCreate(Schema):
-    title: str = Field(min_length=1, max_length=300)
+    title: TaskTitle
     description: str = Field(default="", max_length=50000)
     status_id: uuid.UUID | None = Field(default=None, description="Defaults to the project's first 'todo' status")
     priority: Priority = Priority.none
@@ -75,7 +77,7 @@ class TaskCreate(Schema):
 
 
 class TaskUpdate(Schema):
-    title: str | None = Field(default=None, min_length=1, max_length=300)
+    title: TaskTitle | None = None
     description: str | None = Field(default=None, max_length=50000)
     status_id: uuid.UUID | None = None
     priority: Priority | None = None
@@ -97,16 +99,22 @@ class TaskMove(Schema):
 
 
 class TaskBulkUpdate(Schema):
+    """Same change applied to every task (all-or-nothing). Omitted fields are left alone."""
+
     task_ids: list[uuid.UUID] = Field(min_length=1, max_length=500)
-    status_id: uuid.UUID | None = None
+    status_id: uuid.UUID | None = Field(default=None, description="Must belong to every task's project")
     priority: Priority | None = None
     assignee_id: uuid.UUID | None = None
     clear_assignee: bool = False
-    milestone_id: uuid.UUID | None = None
-    due_date: date | None = None
+    milestone_id: uuid.UUID | None = Field(
+        default=None, description="Must belong to every task's project; explicit null clears"
+    )
+    due_date: date | None = Field(default=None, description="Explicit null clears the due date")
     add_label_ids: list[uuid.UUID] = Field(default_factory=list)
     remove_label_ids: list[uuid.UUID] = Field(default_factory=list)
-    delete: bool = False
+    delete: bool = Field(
+        default=False, description="Move the tasks (and their subtasks) to the trash; other fields are ignored"
+    )
 
 
 class BulkResult(Schema):

@@ -7,7 +7,10 @@ from pydantic import Field, StringConstraints, model_validator
 from app.models.enums import Health, Priority, ProjectRole, ProjectStatus, ProjectVisibility, StatusCategory
 from app.schemas.common import Color, Name, Schema, UserBrief
 
-ProjectKey = Annotated[str, StringConstraints(strip_whitespace=True, to_upper=True, pattern=r"^[A-Z][A-Z0-9]{1,5}$")]
+# The pattern is checked before `to_upper` is applied, so it accepts either case; the stored key is upper-case.
+ProjectKey = Annotated[
+    str, StringConstraints(strip_whitespace=True, to_upper=True, pattern=r"^[A-Za-z][A-Za-z0-9]{1,5}$")
+]
 
 
 class ProjectCreate(Schema):

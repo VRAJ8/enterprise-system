@@ -32,3 +32,4 @@ backend/uploads/
 # Test artifacts
 playwright-report/
 test-results/
+.workflows/

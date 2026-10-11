@@ -22,7 +22,8 @@ class CommentOut(Schema):
     body: str
     created_at: datetime
     edited_at: datetime | None
-    can_edit: bool = False
+    can_edit: bool = Field(default=False, description="True for the comment's author")
+    can_delete: bool = Field(default=False, description="Author, project lead or workspace admin")
 
 
 class AttachmentOut(Schema):
@@ -33,7 +34,8 @@ class AttachmentOut(Schema):
     content_type: str
     size_bytes: int
     created_at: datetime
-    is_image: bool = False
+    is_image: bool = Field(default=False, description="Previewable image (image/*, except scriptable SVG)")
+    can_delete: bool = Field(default=False, description="Uploader, project lead or workspace admin")
 
 
 class ActivityOut(Schema):
