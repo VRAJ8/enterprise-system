@@ -109,9 +109,13 @@ const DUE_OPTIONS: { value: DueFilter; label: string }[] = [
   { value: 'none', label: 'No due date' },
 ]
 
-function Chip({ active, children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
+const Chip = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }>(function Chip(
+  { active, children, ...props },
+  ref,
+) {
   return (
     <button
+      ref={ref}
       type="button"
       className={cn(
         'inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border px-2 text-xs transition-colors [&_svg]:size-3.5',
@@ -124,7 +128,7 @@ function Chip({ active, children, ...props }: React.ButtonHTMLAttributes<HTMLBut
       {children}
     </button>
   )
-}
+})
 
 /** Filter toolbar. `hideAssignee` for views that are already per-person (My Tasks). */
 export function FilterBar({

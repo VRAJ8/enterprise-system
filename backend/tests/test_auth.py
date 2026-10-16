@@ -159,3 +159,14 @@ async def test_invite_helper_roles(client):
     wid = owner.user["workspaces"][0]["workspace_id"]
     g = await invite(owner, wid, "Guest Person", "guest")
     assert g.user["workspaces"][0]["role"] == "guest"
+
+
+async def test_login_accepts_reserved_domain_accounts(client, db):
+    """Accounts on reserved TLDs (seed data, internal domains) can still sign in."""
+    from app.core.security import hash_password
+    from app.models import User
+
+    db.add(User(email="dev@acme.test", name="Dev", password_hash=hash_password("password123")))
+    await db.commit()
+    r = await client.post("/api/v1/auth/login", json={"email": "Dev@Acme.test", "password": "password123"})
+    assert r.status_code == 200, r.text

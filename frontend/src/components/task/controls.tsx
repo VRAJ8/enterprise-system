@@ -124,7 +124,7 @@ export function DueDateControl({
             <>
               <CalendarDays className="size-3.5 text-muted-foreground" />
               <DueDate date={task.due_date} closed={isClosed(task.status.category)} />
-              <span className="text-xs text-subtle">{formatDate(task.due_date, true)}</span>
+              <span className="text-xs text-subtle">{formatDate(task.due_date)}</span>
             </>
           ) : (
             <DueDate date={task.due_date} closed={isClosed(task.status.category)} />

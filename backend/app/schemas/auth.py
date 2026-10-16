@@ -18,7 +18,9 @@ class RegisterIn(Schema):
 
 
 class LoginIn(Schema):
-    email: EmailStr
+    # Plain string: signing in only looks the account up, so it must not reject addresses that
+    # were accepted elsewhere (e.g. seeded or SSO-provisioned ones on reserved domains).
+    email: str = Field(min_length=3, max_length=320)
     password: str = Field(max_length=128)
 
 
