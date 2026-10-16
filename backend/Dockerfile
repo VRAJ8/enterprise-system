@@ -11,5 +11,6 @@ RUN useradd --create-home --uid 10001 app && mkdir -p /app/uploads && chown -R a
 USER app
 
 EXPOSE 8000
-# Apply migrations, then serve. Use several workers only with an external realtime broker (see docs/ARCHITECTURE.md §8).
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]
+# Apply migrations, optionally load the demo workspace into an empty database (SEED_DEMO=true), then serve
+# on $PORT (set by hosts like Render). Use several workers only with an external realtime broker (docs/ARCHITECTURE.md §8).
+CMD ["sh", "-c", "alembic upgrade head && if [ \"$SEED_DEMO\" = true ]; then python seed.py; fi; exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]

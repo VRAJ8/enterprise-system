@@ -102,7 +102,8 @@ export function useRealtime(workspaceId: string) {
         reconnectTimer = window.setTimeout(connect, 1500)
         return
       }
-      const origin = API_ORIGIN || window.location.origin
+      // VITE_WS_ORIGIN: when /api is proxied (e.g. by Netlify, which can't carry WebSockets), connect to the API host directly.
+      const origin = (import.meta.env.VITE_WS_ORIGIN as string | undefined)?.replace(/\/$/, '') || API_ORIGIN || window.location.origin
       const url = `${origin.replace(/^http/, 'ws')}/api/v1/ws?token=${encodeURIComponent(token)}`
       setState('connecting')
       ws = new WebSocket(url)

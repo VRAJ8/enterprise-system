@@ -5,7 +5,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -39,6 +39,15 @@ class Settings(BaseSettings):
 
     reminder_interval_minutes: int = 30
     enable_scheduler: bool = True
+
+    @field_validator("database_url")
+    @classmethod
+    def _async_driver(cls, url: str) -> str:
+        """Hosts like Render and Heroku hand out postgres:// URLs; the app needs the asyncpg driver."""
+        for prefix in ("postgres://", "postgresql://"):
+            if url.startswith(prefix):
+                return "postgresql+asyncpg://" + url[len(prefix) :]
+        return url
 
     @model_validator(mode="after")
     def _check_secret(self) -> "Settings":

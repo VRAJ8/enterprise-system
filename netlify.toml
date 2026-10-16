@@ -1,15 +1,11 @@
-# Netlify hosts the web app only. The API runs elsewhere: set VITE_API_URL in the site's
-# environment to its origin (see frontend/.env.example and the README's deploy notes).
+# Netlify hosts the web app; the API runs elsewhere (render.yaml).
+# Set API_URL in the site's environment to the API's origin, e.g. https://projecthub-api.onrender.com.
+# /api/* is proxied there (first-party cookies, no CORS); live updates connect to it directly,
+# since Netlify's proxy can't carry WebSockets.
 [build]
   base = "frontend"
-  command = "npm run build"
+  command = "VITE_WS_ORIGIN=\"${API_URL:-}\" npm run build && node scripts/netlify-redirects.mjs"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "22"
-
-# Single-page app: let the client router handle every path.
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200

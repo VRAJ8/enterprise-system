@@ -1,0 +1,36 @@
+# Render Blueprint for the API and its Postgres database.
+# In Render: New → Blueprint → pick this repository. The web app is hosted on Netlify,
+# which proxies /api here (see netlify.toml); set Netlify's API_URL to this service's URL.
+databases:
+  - name: projecthub-db
+    plan: free
+    databaseName: projecthub
+    user: projecthub
+
+services:
+  - type: web
+    name: projecthub-api
+    runtime: docker
+    plan: free
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: projecthub-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: APP_URL
+        value: https://enterprise-system.netlify.app
+      - key: CORS_ORIGINS
+        value: https://enterprise-system.netlify.app
+      # Loads the Acme demo workspace (public demo accounts, password demo1234) into an empty
+      # database. Set to "false" before using this deployment for real work.
+      - key: SEED_DEMO
+        value: "true"
