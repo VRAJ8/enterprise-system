@@ -1,0 +1,43 @@
+# Full stack: PostgreSQL + API + web (nginx serving the built SPA and proxying /api).
+#   docker compose up --build            -> http://localhost:8080
+#   docker compose exec api python seed.py --reset   (optional demo data)
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pm
+      POSTGRES_PASSWORD: pm
+      POSTGRES_DB: pm
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pm"]
+      interval: 3s
+      retries: 20
+
+  api:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ENV: production
+      DATABASE_URL: postgresql+asyncpg://pm:pm@db:5432/pm
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET (at least 32 random characters)}
+      CORS_ORIGINS: http://localhost:8080
+      APP_URL: http://localhost:8080
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads:/app/uploads
+
+  web:
+    build: ./frontend
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:
+  uploads:

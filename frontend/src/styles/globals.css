@@ -1,0 +1,207 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens (HSL triplets). Light is the default; .dark overrides.
+ * canvas  = app background behind panels
+ * surface = panels / cards; raised = popovers & hovering cards; sunken = inputs / wells
+ */
+@layer base {
+  :root {
+    --canvas: 240 10% 97.5%;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 9%;
+    --surface: 0 0% 100%;
+    --surface-raised: 0 0% 100%;
+    --surface-sunken: 240 8% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 9%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 243 90% 96%;
+    --secondary: 240 6% 94%;
+    --secondary-foreground: 240 8% 15%;
+    --muted: 240 6% 95%;
+    --muted-foreground: 240 4% 44%;
+    --subtle: 240 4% 62%;
+    --accent: 240 6% 94.5%;
+    --accent-foreground: 240 10% 9%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 60% 38%;
+    --warning: 35 92% 45%;
+    --danger: 0 72% 51%;
+    --info: 213 90% 52%;
+    --border: 240 7% 89%;
+    --input: 240 7% 86%;
+    --ring: 243 75% 59%;
+    --shadow: 240 20% 10%;
+    --radius: 0.625rem;
+    color-scheme: light;
+  }
+
+  .dark {
+    --canvas: 240 7% 5%;
+    --background: 240 6% 6.5%;
+    --foreground: 240 6% 93%;
+    --surface: 240 5% 8.5%;
+    --surface-raised: 240 5% 11%;
+    --surface-sunken: 240 6% 6%;
+    --card: 240 5% 8.5%;
+    --card-foreground: 240 6% 93%;
+    --popover: 240 5% 10.5%;
+    --popover-foreground: 240 6% 93%;
+    --primary: 243 85% 68%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 243 45% 18%;
+    --secondary: 240 5% 14%;
+    --secondary-foreground: 240 6% 90%;
+    --muted: 240 5% 13%;
+    --muted-foreground: 240 5% 58%;
+    --subtle: 240 4% 42%;
+    --accent: 240 5% 14.5%;
+    --accent-foreground: 240 6% 93%;
+    --destructive: 0 72% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 55% 48%;
+    --warning: 38 92% 56%;
+    --danger: 0 80% 64%;
+    --info: 213 94% 64%;
+    --border: 240 5% 15%;
+    --input: 240 5% 18%;
+    --ring: 243 85% 68%;
+    --shadow: 0 0% 0%;
+    color-scheme: dark;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-foreground antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.25);
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring/60 ring-offset-0;
+  }
+
+  /* Calm, thin scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--subtle));
+  }
+}
+
+@layer components {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Rendered markdown (descriptions, comments, updates) */
+  .prose-ph {
+    @apply text-sm leading-relaxed text-foreground/90;
+  }
+  .prose-ph p {
+    @apply my-2 first:mt-0 last:mb-0;
+  }
+  .prose-ph a {
+    @apply text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary;
+  }
+  .prose-ph ul {
+    @apply my-2 list-disc pl-5;
+  }
+  .prose-ph ol {
+    @apply my-2 list-decimal pl-5;
+  }
+  .prose-ph li {
+    @apply my-0.5;
+  }
+  .prose-ph code {
+    @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.85em];
+  }
+  .prose-ph pre {
+    @apply my-2 overflow-x-auto rounded-lg bg-surface-sunken p-3 font-mono text-xs;
+  }
+  .prose-ph pre code {
+    @apply bg-transparent p-0;
+  }
+  .prose-ph blockquote {
+    @apply my-2 border-l-2 border-border pl-3 text-muted-foreground;
+  }
+  .prose-ph h1,
+  .prose-ph h2,
+  .prose-ph h3 {
+    @apply mb-1 mt-3 font-semibold text-foreground;
+  }
+  .prose-ph h1 {
+    @apply text-lg;
+  }
+  .prose-ph h2 {
+    @apply text-base;
+  }
+  .prose-ph h3 {
+    @apply text-sm;
+  }
+  .prose-ph table {
+    @apply my-2 w-full border-collapse text-xs;
+  }
+  .prose-ph th,
+  .prose-ph td {
+    @apply border border-border px-2 py-1 text-left;
+  }
+  .prose-ph input[type='checkbox'] {
+    @apply mr-1.5 align-middle accent-primary;
+  }
+  .prose-ph hr {
+    @apply my-3 border-border;
+  }
+}
+
+@layer utilities {
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .bg-grid {
+    background-image: linear-gradient(hsl(var(--border) / 0.5) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.5) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .mask-fade-b {
+    mask-image: linear-gradient(to bottom, black 85%, transparent);
+  }
+}
