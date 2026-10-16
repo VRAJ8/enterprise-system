@@ -1,6 +1,8 @@
 import {
   closestCorners,
   DndContext,
+  pointerWithin,
+  type CollisionDetection,
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
@@ -44,6 +46,16 @@ import {
 } from './model'
 
 const GROUP_KEY = 'ph-board-group'
+
+/** Prefer whatever is under the pointer (a card, else the column); fall back to geometry for keyboard drags. */
+const collisionDetection: CollisionDetection = (args) => {
+  const hits = pointerWithin(args)
+  if (hits.length) {
+    const card = hits.find((h) => !String(h.id).startsWith('c|'))
+    return card ? [card] : hits
+  }
+  return closestCorners(args)
+}
 
 export default function BoardView() {
   const { project, canEdit } = useProjectContext()
@@ -166,7 +178,7 @@ export default function BoardView() {
       </div>
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={collisionDetection}
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
