@@ -316,9 +316,7 @@ async def test_list_visibility_rules(team, db, client):
 
 
 async def test_lead_sees_team_entries_only_while_lead(team, db):
-    project, st = await make_project(
-        db, team.workspace_id, members={team.member.id: "member", team.member2.id: "lead"}
-    )
+    project, st = await make_project(db, team.workspace_id, members={team.member.id: "member", team.member2.id: "lead"})
     task = await make_task(db, project, st["todo"])
     await _log(team.member, task.id, 30)
     assert len(await _list(team.member2, team.workspace_id)) == 1
@@ -499,9 +497,7 @@ async def test_concurrent_starts_leave_one_running_timer(team, db):
     tasks = [await make_task(db, project, st["todo"], title=f"T{i}") for i in range(4)]
 
     for pair in (tasks[:2], tasks[2:]):  # first with no timer running, then with one running
-        responses = await asyncio.gather(
-            *(team.member.post(f"/api/v1/tasks/{t.id}/timer/start") for t in pair)
-        )
+        responses = await asyncio.gather(*(team.member.post(f"/api/v1/tasks/{t.id}/timer/start") for t in pair))
         codes = sorted(r.status_code for r in responses)
         assert codes in ([201, 201], [201, 409]), [r.text for r in responses]
         assert await _running_count(db, team.member.id) == 1
@@ -511,9 +507,7 @@ async def test_concurrent_starts_leave_one_running_timer(team, db):
 
 
 async def test_owner_or_workspace_admin_edits_entries(team, db, client, events):
-    project, st = await make_project(
-        db, team.workspace_id, members={team.member.id: "member", team.member2.id: "lead"}
-    )
+    project, st = await make_project(db, team.workspace_id, members={team.member.id: "member", team.member2.id: "lead"})
     task = await make_task(db, project, st["todo"])
     entry = await _log(team.member, task.id, 30, note="Draft")
     url = f"/api/v1/time-entries/{entry['id']}"
@@ -586,9 +580,7 @@ async def test_running_entry_only_accepts_a_new_note(team, db):
 
 
 async def test_delete_entry_rules(team, db, events):
-    project, st = await make_project(
-        db, team.workspace_id, members={team.member.id: "member", team.member2.id: "lead"}
-    )
+    project, st = await make_project(db, team.workspace_id, members={team.member.id: "member", team.member2.id: "lead"})
     task = await make_task(db, project, st["todo"])
     a = await _log(team.member, task.id, 30)
     b = await _log(team.member, task.id, 40)
