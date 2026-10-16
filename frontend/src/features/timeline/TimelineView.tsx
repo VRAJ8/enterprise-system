@@ -115,7 +115,7 @@ export default function TimelineView() {
         </div>
       </div>
       <div className="flex min-h-0 flex-1">
-        <div className="w-72 shrink-0 overflow-hidden border-r border-border/60 bg-surface">
+        <div className="w-36 shrink-0 overflow-hidden border-r border-border/60 bg-surface sm:w-72">
           <div className="h-14 border-b border-border/60" />
           {scheduled.map((t) => (
             <button
@@ -125,7 +125,7 @@ export default function TimelineView() {
               className="flex w-full items-center gap-2 border-b border-border/40 px-3 text-left text-sm hover:bg-accent/40"
             >
               <StatusIcon category={t.status.category} color={t.status.color} />
-              <span className="shrink-0 whitespace-nowrap font-mono text-2xs text-subtle">{t.ref}</span>
+              <span className="hidden shrink-0 whitespace-nowrap font-mono text-2xs text-subtle sm:inline">{t.ref}</span>
               <span className="truncate">{t.title}</span>
             </button>
           ))}

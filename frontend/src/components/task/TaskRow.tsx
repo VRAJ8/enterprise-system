@@ -63,7 +63,7 @@ export const TaskRow = React.memo(function TaskRow({
         </div>
       )}
       <PriorityControl task={task} disabled={!editable} />
-      <span className="w-[4.5rem] shrink-0 truncate font-mono text-2xs text-subtle">{task.ref}</span>
+      <span className="hidden w-[4.5rem] shrink-0 truncate font-mono text-2xs text-subtle sm:inline-block">{task.ref}</span>
       <StatusControl task={task} disabled={!editable} />
       <div className={cn('flex min-w-0 flex-1 items-center gap-2', indent && 'pl-4')}>
         {showProject && (
@@ -76,7 +76,7 @@ export const TaskRow = React.memo(function TaskRow({
         <span className={cn('truncate', task.status.category === 'done' && 'text-muted-foreground line-through decoration-subtle/60')}>
           {task.title}
         </span>
-        <TaskMeta task={task} />
+        <TaskMeta task={task} className="hidden sm:flex" />
         <LabelsControl task={task} disabled={!editable} className="hidden max-w-[40%] overflow-hidden lg:flex" />
       </div>
       <DueDateControl task={task} disabled={!editable} />

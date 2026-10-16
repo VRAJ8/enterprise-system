@@ -28,8 +28,8 @@ export function PageHeader({
         <div className="flex min-w-0 items-center gap-1.5 text-sm">
           {breadcrumb && (
             <>
-              <span className="truncate text-muted-foreground">{breadcrumb}</span>
-              <span className="text-subtle">/</span>
+              <span className="hidden truncate text-muted-foreground sm:inline">{breadcrumb}</span>
+              <span className="hidden text-subtle sm:inline">/</span>
             </>
           )}
           <h1 className="truncate font-semibold tracking-tight">{title}</h1>

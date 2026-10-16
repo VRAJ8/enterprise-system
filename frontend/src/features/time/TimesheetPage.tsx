@@ -109,7 +109,10 @@ export default function TimesheetPage() {
                 {!rows.length && (
                   <tr>
                     <td colSpan={9}>
-                      <EmptyState compact icon={Clock} title="No time logged this week" description="Start a timer from any task, or add a row below." />
+                      {/* Pinned to the visible width so it stays readable while the table scrolls sideways on phones */}
+                      <div className="sticky left-0 w-[min(100%,calc(100vw-2rem))]">
+                        <EmptyState compact icon={Clock} title="No time logged this week" description="Start a timer from any task, or add a row below." />
+                      </div>
                     </td>
                   </tr>
                 )}

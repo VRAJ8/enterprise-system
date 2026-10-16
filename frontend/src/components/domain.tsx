@@ -184,7 +184,7 @@ export function HealthBadge({
   const m = HEALTH_META[status] ?? HEALTH_META.no_data
   const badge = (
     <span
-      className={cn('inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-2xs font-medium', m.bg, m.text, className)}
+      className={cn('inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-2xs font-medium', m.bg, m.text, className)}
     >
       <span className={cn('size-1.5 rounded-full', m.dot, status === 'off_track' && 'animate-pulse-soft')} />
       {m.label}

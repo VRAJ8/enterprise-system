@@ -79,7 +79,7 @@ export default function ProjectsPage() {
               key={f.value}
               onClick={() => setFilter(f.value)}
               className={cn(
-                'inline-flex h-7 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors',
+                'inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-medium transition-colors',
                 filter === f.value ? 'border-primary/40 bg-primary-soft text-primary' : 'border-border text-muted-foreground hover:bg-accent',
               )}
             >
