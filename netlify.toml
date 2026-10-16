@@ -1,0 +1,15 @@
+# Netlify hosts the web app only. The API runs elsewhere: set VITE_API_URL in the site's
+# environment to its origin (see frontend/.env.example and the README's deploy notes).
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Single-page app: let the client router handle every path.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

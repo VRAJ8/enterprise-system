@@ -87,4 +87,5 @@ docs/ARCHITECTURE.md
 - Passwords are hashed with Argon2. Access tokens are short-lived (15 minutes) and kept in memory. Refresh tokens rotate on every use, live in an httpOnly cookie, and are stored hashed per device session.
 - Every request is authorised through one permissions module. Resources you can't access return 404, so IDs can't be probed.
 - In production, set `ENV=production`, a strong `JWT_SECRET`, `COOKIE_SECURE=true` behind HTTPS, and explicit `CORS_ORIGINS`.
+- Hosting the web app separately from the API (e.g. Netlify, configured by `netlify.toml`): set `VITE_API_URL` to the API's origin in the site's build environment, and on the API set `CORS_ORIGINS` to the site's origin plus `COOKIE_SAMESITE=none` and `COOKIE_SECURE=true` so the refresh cookie works across sites.
 - The realtime broker is in-process. To run more than one API instance, swap it for Postgres `LISTEN/NOTIFY` or Redis (see the architecture doc).
