@@ -999,6 +999,228 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Notifications
+         * @description Your inbox, newest first; project/task are null once you lose access or the task is trashed.
+         */
+        get: operations["list_notifications_api_v1_notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Unread Count
+         * @description Number of unread notifications in your inbox (optionally for one workspace).
+         */
+        get: operations["unread_count_api_v1_notifications_unread_count_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/mark-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Read
+         * @description Mark your notifications read: the given ids, or all of them (optionally in one workspace).
+         */
+        post: operations["mark_read_api_v1_notifications_mark_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Project Activity
+         * @description A project's history, newest first (entries about trashed tasks included).
+         */
+        get: operations["project_activity_api_v1_projects__project_id__activity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/{task_id}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Task Activity
+         * @description A task's history, newest first (also available while the task is in the trash).
+         */
+        get: operations["task_activity_api_v1_tasks__task_id__activity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Workspace Activity
+         * @description Recent activity across the projects you can see; workspace-level entries for owners/admins only.
+         */
+        get: operations["workspace_activity_api_v1_workspaces__workspace_id__activity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Project Insights */
+        get: operations["project_insights_api_v1_projects__project_id__insights_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/insights/portfolio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Portfolio */
+        get: operations["portfolio_api_v1_workspaces__workspace_id__insights_portfolio_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/insights/workload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Workload */
+        get: operations["workload_api_v1_workspaces__workspace_id__insights_workload_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/insights/time": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Time Report */
+        get: operations["time_report_api_v1_workspaces__workspace_id__insights_time_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Home */
+        get: operations["home_api_v1_workspaces__workspace_id__home_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search */
+        get: operations["search_api_v1_workspaces__workspace_id__search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -1024,6 +1246,29 @@ export interface components {
         AcceptInvitationIn: {
             /** Token */
             token: string;
+        };
+        /** ActivityOut */
+        ActivityOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Verb */
+            verb: string;
+            actor: components["schemas"]["UserBrief"] | null;
+            /** Project Id */
+            project_id: string | null;
+            task: components["schemas"]["TaskBrief"] | null;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** AttachmentOut */
         AttachmentOut: {
@@ -1077,6 +1322,18 @@ export interface components {
             /** Task Ids */
             task_ids: string[];
         };
+        /** BurnupPoint */
+        BurnupPoint: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Scope */
+            scope: number;
+            /** Completed */
+            completed: number;
+        };
         /** ChangePasswordIn */
         ChangePasswordIn: {
             /** Current Password */
@@ -1129,6 +1386,33 @@ export interface components {
             /** Body */
             body: string;
         };
+        /** ForecastOut */
+        ForecastOut: {
+            /**
+             * Completion Date
+             * @description Projected finish at recent throughput; null if not enough data
+             */
+            completion_date: string | null;
+            /** Earliest */
+            earliest: string | null;
+            /** Latest */
+            latest: string | null;
+            /**
+             * Weekly Throughput
+             * @description Median tasks completed per week, last 6 weeks
+             */
+            weekly_throughput: number;
+            /**
+             * Confidence
+             * @enum {string}
+             */
+            confidence: "high" | "medium" | "low" | "none";
+            /**
+             * Will Miss Target
+             * @description Forecast later than the project's target date
+             */
+            will_miss_target: boolean | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1139,6 +1423,63 @@ export interface components {
          * @enum {string}
          */
         Health: "on_track" | "at_risk" | "off_track";
+        /** HealthOut */
+        HealthOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "on_track" | "at_risk" | "off_track" | "not_started" | "done" | "no_data";
+            /**
+             * Reasons
+             * @description Human-readable explanations, most important first
+             */
+            reasons?: string[];
+            /**
+             * Progress
+             * @description 0–1 share of scope completed (estimate-weighted when estimates exist)
+             */
+            progress: number;
+            /**
+             * Expected Progress
+             * @description 0–1 share of the schedule elapsed; null without dates
+             */
+            expected_progress: number | null;
+        };
+        /** HomeOut */
+        HomeOut: {
+            /** Open Count */
+            open_count: number;
+            /** Overdue */
+            overdue: components["schemas"]["TaskOut"][];
+            /** Due Today */
+            due_today: components["schemas"]["TaskOut"][];
+            /** Due This Week */
+            due_this_week: components["schemas"]["TaskOut"][];
+            /** In Progress */
+            in_progress: components["schemas"]["TaskOut"][];
+            /**
+             * Review Queue
+             * @description Tasks in review in projects the user leads
+             */
+            review_queue: components["schemas"]["TaskOut"][];
+            /** Completed Last 7 Days */
+            completed_last_7_days: number;
+            /** Time This Week Minutes */
+            time_this_week_minutes: number;
+            /** Capacity Hours */
+            capacity_hours: number;
+            timer: components["schemas"]["TimeEntryOut"] | null;
+            /** Projects */
+            projects: components["schemas"]["HomeProject"][];
+        };
+        /** HomeProject */
+        HomeProject: {
+            project: components["schemas"]["ProjectBrief"];
+            health: components["schemas"]["HealthOut"];
+            /** My Open Tasks */
+            my_open_tasks: number;
+        };
         /** InvitationCreate */
         InvitationCreate: {
             /**
@@ -1226,6 +1567,18 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** MarkRead */
+        MarkRead: {
+            /** Ids */
+            ids?: string[];
+            /**
+             * All
+             * @default false
+             */
+            all: boolean;
+            /** Workspace Id */
+            workspace_id?: string | null;
         };
         /** MeOut */
         MeOut: {
@@ -1362,6 +1715,49 @@ export interface components {
              */
             task_done: number;
         };
+        /** MilestoneRisk */
+        MilestoneRisk: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /** Due Date */
+            due_date: string | null;
+            /** Completed At */
+            completed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Task Total
+             * @default 0
+             */
+            task_total: number;
+            /**
+             * Task Done
+             * @default 0
+             */
+            task_done: number;
+            /**
+             * At Risk
+             * @default false
+             */
+            at_risk: boolean;
+            /** Risk Reason */
+            risk_reason?: string | null;
+        };
         /** MilestoneUpdate */
         MilestoneUpdate: {
             /** Name */
@@ -1373,6 +1769,39 @@ export interface components {
             /** Completed */
             completed?: boolean | null;
         };
+        /** NotificationOut */
+        NotificationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            type: components["schemas"]["NotificationType"];
+            /**
+             * Workspace Id
+             * Format: uuid
+             */
+            workspace_id: string;
+            actor: components["schemas"]["UserBrief"] | null;
+            project: components["schemas"]["ProjectBrief"] | null;
+            task: components["schemas"]["TaskBrief"] | null;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+            /** Read At */
+            read_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * NotificationType
+         * @enum {string}
+         */
+        NotificationType: "assigned" | "mentioned" | "commented" | "status_changed" | "due_soon" | "overdue" | "added_to_project" | "project_update" | "invited";
         /** Ok */
         Ok: {
             /**
@@ -1380,6 +1809,44 @@ export interface components {
              * @default true
              */
             ok: boolean;
+        };
+        /** PersonLoad */
+        PersonLoad: {
+            user: components["schemas"]["UserBrief"];
+            /** Open Tasks */
+            open_tasks: number;
+            /** Estimate Hours */
+            estimate_hours: number;
+            /** Overdue */
+            overdue: number;
+        };
+        /** PortfolioOut */
+        PortfolioOut: {
+            /** Projects */
+            projects: components["schemas"]["PortfolioProject"][];
+            /**
+             * Summary
+             * @description Count of projects per health status
+             */
+            summary: {
+                [key: string]: number;
+            };
+        };
+        /** PortfolioProject */
+        PortfolioProject: {
+            project: components["schemas"]["ProjectBrief"];
+            lead: components["schemas"]["UserBrief"] | null;
+            /** Target Date */
+            target_date: string | null;
+            health: components["schemas"]["HealthOut"];
+            /** Open */
+            open: number;
+            /** Overdue */
+            overdue: number;
+            /** Forecast Date */
+            forecast_date: string | null;
+            /** Latest Update Health */
+            latest_update_health: string | null;
         };
         /**
          * Priority
@@ -1441,6 +1908,35 @@ export interface components {
             target_date?: string | null;
             /** Member Ids */
             member_ids?: string[];
+        };
+        /** ProjectInsightsOut */
+        ProjectInsightsOut: {
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            health: components["schemas"]["HealthOut"];
+            scope: components["schemas"]["ScopeOut"];
+            forecast: components["schemas"]["ForecastOut"];
+            /** Burnup */
+            burnup: components["schemas"]["BurnupPoint"][];
+            /** Status Breakdown */
+            status_breakdown: components["schemas"]["StatusCount"][];
+            /** Weekly */
+            weekly: components["schemas"]["WeekCount"][];
+            /** Cycle Time Days */
+            cycle_time_days: number | null;
+            /** People */
+            people: components["schemas"]["PersonLoad"][];
+            /** Milestones */
+            milestones: components["schemas"]["MilestoneRisk"][];
+            /**
+             * At Risk Tasks
+             * @description Overdue, blocked, or due soon without being started
+             */
+            at_risk_tasks: components["schemas"]["TaskOut"][];
+            latest_update: components["schemas"]["ProjectUpdateOut"] | null;
         };
         /** ProjectMemberCreate */
         ProjectMemberCreate: {
@@ -1622,6 +2118,38 @@ export interface components {
             /** Workspace Name */
             workspace_name?: string | null;
         };
+        /** ScopeOut */
+        ScopeOut: {
+            /** Total */
+            total: number;
+            /** Open */
+            open: number;
+            /** Done */
+            done: number;
+            /** Canceled */
+            canceled: number;
+            /** Overdue */
+            overdue: number;
+            /** Blocked */
+            blocked: number;
+            /** Unassigned */
+            unassigned: number;
+            /** Unestimated */
+            unestimated: number;
+            /** Estimate Total Hours */
+            estimate_total_hours: number;
+            /** Estimate Done Hours */
+            estimate_done_hours: number;
+        };
+        /** SearchOut */
+        SearchOut: {
+            /** Tasks */
+            tasks: components["schemas"]["TaskBrief"][];
+            /** Projects */
+            projects: components["schemas"]["ProjectBrief"][];
+            /** People */
+            people: components["schemas"]["UserBrief"][];
+        };
         /** SessionOut */
         SessionOut: {
             /**
@@ -1667,6 +2195,22 @@ export interface components {
          * @enum {string}
          */
         StatusCategory: "backlog" | "todo" | "in_progress" | "review" | "done" | "canceled";
+        /** StatusCount */
+        StatusCount: {
+            /**
+             * Status Id
+             * Format: uuid
+             */
+            status_id: string;
+            /** Name */
+            name: string;
+            /** Category */
+            category: string;
+            /** Color */
+            color: string;
+            /** Count */
+            count: number;
+        };
         /** StatusCreate */
         StatusCreate: {
             /** Name */
@@ -2045,6 +2589,32 @@ export interface components {
              */
             label_ids?: string[] | null;
         };
+        /** TimeByDay */
+        TimeByDay: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Minutes */
+            minutes: number;
+        };
+        /** TimeByProject */
+        TimeByProject: {
+            project: components["schemas"]["ProjectBrief"];
+            /** Minutes */
+            minutes: number;
+        };
+        /** TimeByUser */
+        TimeByUser: {
+            user: components["schemas"]["UserBrief"];
+            /** Minutes */
+            minutes: number;
+            /** Capacity Minutes */
+            capacity_minutes: number;
+            /** Utilization */
+            utilization: number;
+        };
         /** TimeEntryCreate */
         TimeEntryCreate: {
             /** Minutes */
@@ -2104,6 +2674,27 @@ export interface components {
             /** Note */
             note?: string | null;
         };
+        /** TimeReportOut */
+        TimeReportOut: {
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * Format: date
+             */
+            date_to: string;
+            /** Total Minutes */
+            total_minutes: number;
+            /** By User */
+            by_user: components["schemas"]["TimeByUser"][];
+            /** By Project */
+            by_project: components["schemas"]["TimeByProject"][];
+            /** By Day */
+            by_day: components["schemas"]["TimeByDay"][];
+        };
         /** TimerOut */
         TimerOut: {
             entry: components["schemas"]["TimeEntryOut"] | null;
@@ -2128,6 +2719,11 @@ export interface components {
             /** Expires In */
             expires_in: number;
             user: components["schemas"]["MeOut"];
+        };
+        /** UnreadCount */
+        UnreadCount: {
+            /** Count */
+            count: number;
         };
         /** UserBrief */
         UserBrief: {
@@ -2157,6 +2753,61 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** WeekCount */
+        WeekCount: {
+            /**
+             * Week Start
+             * Format: date
+             */
+            week_start: string;
+            /** Completed */
+            completed: number;
+            /** Created */
+            created: number;
+        };
+        /** WorkloadOut */
+        WorkloadOut: {
+            /** Weeks */
+            weeks: string[];
+            /** People */
+            people: components["schemas"]["WorkloadPerson"][];
+        };
+        /** WorkloadPerson */
+        WorkloadPerson: {
+            user: components["schemas"]["UserBrief"];
+            /** Capacity Hours */
+            capacity_hours: number;
+            /** Weeks */
+            weeks: components["schemas"]["WorkloadWeek"][];
+            /**
+             * Unscheduled Hours
+             * @description Open estimated work with no due date
+             */
+            unscheduled_hours: number;
+            /** Unestimated Tasks */
+            unestimated_tasks: number;
+            /** Overdue Tasks */
+            overdue_tasks: number;
+        };
+        /** WorkloadWeek */
+        WorkloadWeek: {
+            /**
+             * Week Start
+             * Format: date
+             */
+            week_start: string;
+            /** Planned Hours */
+            planned_hours: number;
+            /** Capacity Hours */
+            capacity_hours: number;
+            /** Task Count */
+            task_count: number;
+            /**
+             * Utilization
+             * @description planned / capacity (can exceed 1)
+             */
+            utilization: number;
         };
         /** WorkspaceCreate */
         WorkspaceCreate: {
@@ -4599,6 +5250,405 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TimeEntryOut"];
+                };
+            };
+        };
+    };
+    list_notifications_api_v1_notifications_get: {
+        parameters: {
+            query?: {
+                /** @description Only this workspace (omit to include invitations to other workspaces) */
+                workspace_id?: string | null;
+                unread_only?: boolean;
+                limit?: number;
+                /** @description Cursor: only entries created before this time (pass the last item's created_at) */
+                before?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unread_count_api_v1_notifications_unread_count_get: {
+        parameters: {
+            query?: {
+                workspace_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnreadCount"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_read_api_v1_notifications_mark_read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkRead"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ok"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    project_activity_api_v1_projects__project_id__activity_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Cursor: only entries created before this time (pass the last item's created_at) */
+                before?: string | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    task_activity_api_v1_tasks__task_id__activity_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Cursor: only entries created before this time (pass the last item's created_at) */
+                before?: string | null;
+            };
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    workspace_activity_api_v1_workspaces__workspace_id__activity_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Cursor: only entries created before this time (pass the last item's created_at) */
+                before?: string | null;
+            };
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    project_insights_api_v1_projects__project_id__insights_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectInsightsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    portfolio_api_v1_workspaces__workspace_id__insights_portfolio_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortfolioOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    workload_api_v1_workspaces__workspace_id__insights_workload_get: {
+        parameters: {
+            query?: {
+                weeks?: number;
+                project_id?: string | null;
+            };
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkloadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    time_report_api_v1_workspaces__workspace_id__insights_time_get: {
+        parameters: {
+            query?: {
+                date_from?: string | null;
+                date_to?: string | null;
+            };
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimeReportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    home_api_v1_workspaces__workspace_id__home_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_api_v1_workspaces__workspace_id__search_get: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
